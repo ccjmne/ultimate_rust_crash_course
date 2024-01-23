@@ -10,21 +10,32 @@
 //
 // You will need to complete 1b as well before you will be able to run this program successfully.
 
+enum Shot {
+    Bullseye,
+    Hit(f64),
+    Miss,
+}
+
 impl Shot {
     // Here is a method for the `Shot` enum you just defined.
-    fn points(self) -> i32 {
+    fn points(self: &Self) -> i32 {
         // 1b. Implement this method to convert a Shot into points
         // - return 5 points if `self` is a `Shot::Bullseye`
         // - return 2 points if `self` is a `Shot::Hit(x)` where x < 3.0
         // - return 1 point if `self` is a `Shot::Hit(x)` where x >= 3.0
         // - return 0 points if `self` is a Miss
+        match *self {
+            Shot::Bullseye          => 5,
+            Shot::Hit(x) if x < 3.0 => 2,
+            Shot::Hit(x)            => 1,
+            Shot::Miss              => 0,
+        }
     }
 }
 
 fn main() {
     // Simulate shooting a bunch of arrows and gathering their coordinates on the target.
     let arrow_coords: Vec<Coord> = get_arrow_coords(5);
-    let mut shots: Vec<Shot> = Vec::new();
 
     // 2. For each coord in arrow_coords:
     //
@@ -34,12 +45,34 @@ fn main() {
     //      - Less than 1.0 -- `Shot::Bullseye`
     //      - Between 1.0 and 5.0 -- `Shot::Hit(value)`
     //      - Greater than 5.0 -- `Shot::Miss`
+    let shots: Vec<Shot> = arrow_coords.iter()
+        .inspect(|coords| coords.print_description())
+        .map(|coords| match coords.distance_from_center() {
+            d if d < 1.0 => Shot::Bullseye,
+            d if d < 5.0 => Shot::Hit(d),
+            _            => Shot::Miss,
+        }).collect();
 
 
-    let mut total = 0;
     // 3. Finally, loop through each shot in shots and add its points to total
+    let total: i32 = shots.iter().map(Shot::points).sum();
 
     println!("Final point total is: {}", total);
+}
+
+fn main_functional() {
+    println!(
+        "Final point total is: {}",
+        get_arrow_coords(5)
+            .iter()
+            .inspect(|coords| coords.print_description())
+            .map(|coords| match coords.distance_from_center() {
+                d if d < 1.0 => Shot::Bullseye,
+                d if d < 5.0 => Shot::Hit(d),
+                _            => Shot::Miss,
+            })
+            .map(|shot| shot.points())
+            .sum::<i32>());
 }
 
 // A coordinate of where an Arrow hit
